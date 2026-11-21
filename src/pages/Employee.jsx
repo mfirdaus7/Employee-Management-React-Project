@@ -1,5 +1,5 @@
 import { useState } from "react";
-import EmployeeCard from "../components/Employeecard";
+import EmployeeCard from "../components/EmployeeKad";
 import EmployeeForm from "../components/EmployeeForm";
 
 function Employees({ employees, onAddEmployee, onDeleteEmployee }) {
