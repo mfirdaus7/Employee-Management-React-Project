@@ -35,9 +35,10 @@ app.put("/api/employees/restore", async (req, res) => {
     });
   }
 
-  const client = await pool.connect();
+  let client;
 
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
 
     await client.query("DELETE FROM employees");
@@ -82,7 +83,9 @@ app.put("/api/employees/restore", async (req, res) => {
       message: "Failed to restore employees.",
     });
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 });
 
@@ -92,19 +95,27 @@ app.post("/api/employees", async (req, res) => {
   const { name, email, position, department, salary, status } = req.body;
 
   if (
-    !name ||
-    !email ||
-    !position ||
-    !department ||
+    !name?.trim() ||
+    !email?.trim() ||
+    !position?.trim() ||
+    !department?.trim() ||
+    !status?.trim() ||
     salary === undefined ||
     salary === null ||
-    !status
+    !Number.isFinite(Number(salary)) ||
+    Number(salary) < 0
   ) {
     return res.status(400).json({
-      message: "All employee fields are required.",
+      message: "Please provide valid employee details.",
     });
   }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  if (!emailRegex.test(email.trim())) {
+    return res.status(400).json({
+      message: "Invalid email format.",
+    });
+  }
   try {
     const result = await pool.query(
       `INSERT INTO employees
@@ -138,19 +149,35 @@ app.post("/api/employees", async (req, res) => {
 app.put("/api/employees/:id", async (req, res) => {
   const employeeId = Number(req.params.id);
 
+  if (!Number.isInteger(employeeId) || employeeId <= 0) {
+    return res.status(400).json({
+      message: "Invalid employee ID.",
+    });
+  }
+
   const { name, email, position, department, salary, status } = req.body;
 
   if (
-    !name ||
-    !email ||
-    !position ||
-    !department ||
+    !name?.trim() ||
+    !email?.trim() ||
+    !position?.trim() ||
+    !department?.trim() ||
+    !status?.trim() ||
     salary === undefined ||
     salary === null ||
-    !status
+    !Number.isFinite(Number(salary)) ||
+    Number(salary) < 0
   ) {
     return res.status(400).json({
-      message: "All employee fields are required.",
+      message: "Please provide valid employee details.",
+    });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email.trim())) {
+    return res.status(400).json({
+      message: "Invalid email format.",
     });
   }
 
@@ -197,6 +224,12 @@ app.put("/api/employees/:id", async (req, res) => {
 
 app.delete("/api/employees/:id", async (req, res) => {
   const employeeId = Number(req.params.id);
+
+  if (!Number.isInteger(employeeId) || employeeId <= 0) {
+    return res.status(400).json({
+      message: "Invalid employee ID.",
+    });
+  }
 
   try {
     const result = await pool.query(
