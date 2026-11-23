@@ -8,28 +8,6 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-// Temporary employee data
-let employees = [
-  {
-    id: 1,
-    name: "Ali Ahmad",
-    email: "ali@example.com",
-    position: "Software Developer",
-    department: "IT",
-    salary: 4000,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Siti Aminah",
-    email: "siti@example.com",
-    position: "QA Engineer",
-    department: "Quality Assurance",
-    salary: 3500,
-    status: "Active",
-  },
-];
-
 // GET all employees
 
 app.get("/api/employees", async (req, res) => {
