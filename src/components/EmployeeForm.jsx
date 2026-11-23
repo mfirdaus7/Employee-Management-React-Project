@@ -1,20 +1,59 @@
-function EmployeeForm({ onAddEmployee, onClose }) {
+import { useState } from "react";
+
+function EmployeeForm({
+  employees,
+  employeeToEdit,
+  onAddEmployee,
+  onUpdateEmployee,
+  onClose,
+}) {
+  const isEditing = Boolean(employeeToEdit);
+
+  const [error, setError] = useState("");
+
   function handleSubmit(event) {
     event.preventDefault();
 
     const formData = new FormData(event.target);
 
-    const newEmployee = {
-      id: Date.now(),
+    const salary = Number(formData.get("salary"));
+
+    if (!Number.isFinite(salary) || salary <= 0) {
+      setError("Salary must be greater than zero!");
+      return;
+    }
+
+    const email = formData.get("email").trim().toLowerCase();
+
+    const duplicateEmail = employees.some(
+      (employee) =>
+        employee.email.toLowerCase() === email &&
+        employee.id !== employeeToEdit?.id,
+    );
+
+    if (duplicateEmail) {
+      setError("This email address is already registered!");
+      return;
+    }
+
+    const employeeData = {
       name: formData.get("name"),
       email: formData.get("email"),
       position: formData.get("position"),
       department: formData.get("department"),
-      salary: Number(formData.get("salary")),
+      salary: salary,
       status: formData.get("status"),
     };
 
-    onAddEmployee(newEmployee);
+    if (isEditing) {
+      onUpdateEmployee({
+        ...employeeToEdit,
+        ...employeeData,
+      });
+    } else {
+      onAddEmployee(employeeData);
+    }
+
     onClose();
   }
 
@@ -22,7 +61,7 @@ function EmployeeForm({ onAddEmployee, onClose }) {
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h2>Add New Employee</h2>
+          <h2>{isEditing ? "Edit Employee" : "Add New Employee"}</h2>
 
           <button type="button" onClick={onClose}>
             X
@@ -30,27 +69,41 @@ function EmployeeForm({ onAddEmployee, onClose }) {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {error && <div className="form-error">{error}</div>}
           <label>Full Name</label>
           <input
             name="name"
             type="text"
             placeholder="Enter full name"
+            defaultValue={employeeToEdit?.name || ""}
             required
           />
 
           <label>Email</label>
-          <input name="email" type="email" placeholder="Enter email" required />
+          <input
+            name="email"
+            type="email"
+            placeholder="Enter email"
+            defaultValue={employeeToEdit?.email || ""}
+            onChange={() => setError("")}
+            required
+          />
 
           <label>Position</label>
           <input
             name="position"
             type="text"
             placeholder="Enter position"
+            defaultValue={employeeToEdit?.position || ""}
             required
           />
 
           <label>Department</label>
-          <select name="department" required defaultValue="">
+          <select
+            name="department"
+            defaultValue={employeeToEdit?.department || ""}
+            required
+          >
             <option value="" disabled>
               Select department
             </option>
@@ -66,11 +119,16 @@ function EmployeeForm({ onAddEmployee, onClose }) {
             type="number"
             min="1"
             placeholder="Enter salary"
+            defaultValue={employeeToEdit?.salary || ""}
+            onChange={() => setError("")}
             required
           />
 
           <label>Status</label>
-          <select name="status" defaultValue="Active">
+          <select
+            name="status"
+            defaultValue={employeeToEdit?.status || "Active"}
+          >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
@@ -80,7 +138,9 @@ function EmployeeForm({ onAddEmployee, onClose }) {
               Cancel
             </button>
 
-            <button type="submit">Save Employee</button>
+            <button type="submit">
+              {isEditing ? "Update Employee" : "Save Employee"}
+            </button>
           </div>
         </form>
       </div>
