@@ -1,5 +1,9 @@
+import { Modal, Button, Badge } from "react-bootstrap";
+
 function EmployeeDetails({ employee, onClose, onEdit, onDelete }) {
   if (!employee) return null;
+
+  const isActive = employee.status === "Active";
 
   function handleEdit() {
     onEdit(employee);
@@ -18,64 +22,77 @@ function EmployeeDetails({ employee, onClose, onEdit, onDelete }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal employee-details"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="modal-header">
-          <h2>Employee Details</h2>
-          <button onClick={onClose}>X</button>
-        </div>
+    <Modal show={true} onHide={onClose} centered>
+      <Modal.Header closeButton>
+        <Modal.Title className="fw-bold">Employee Details</Modal.Title>
+      </Modal.Header>
 
-        <div className="employee-profile">
-          <div className="employee-avatar">
+      <Modal.Body>
+        {/* Employee Profile */}
+        <div className="text-center mb-4">
+          <div
+            className="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center mx-auto mb-3"
+            style={{
+              width: "80px",
+              height: "80px",
+              fontSize: "32px",
+            }}
+          >
             {employee.name.charAt(0).toUpperCase()}
           </div>
-          <h2>{employee.name}</h2>
-          <p>{employee.position}</p>
+
+          <h4 className="fw-bold mb-1">{employee.name}</h4>
+          <p className="text-secondary mb-2">{employee.position}</p>
+
+          <Badge bg={isActive ? "success" : "secondary"}>
+            {employee.status}
+          </Badge>
         </div>
 
-        <div className="employee-info">
-          <div>
-            <label>Email</label>
-            <p>{employee.email}</p>
-          </div>
-          <div>
-            <label>Department</label>
-            <p>{employee.department}</p>
-          </div>
-          <div>
-            <label>Monthly Salary</label>
-            <p>RM {employee.salary.toLocaleString("en-MY")}</p>
-          </div>
-          <div>
-            <label>Status</label>
-            <p>{employee.status}</p>
-          </div>
-          <div>
-            <label>Employee ID</label>
-            <p>{employee.id}</p>
-          </div>
-        </div>
+        <hr />
 
-        <div className="modal-actions">
-          <button type="button" onClick={onClose}>
-            Close
-          </button>
-          <button
-            type="button"
-            className="delete-button"
-            onClick={handleDelete}
-          >
-            Delete
-          </button>
-          <button type="button" onClick={handleEdit}>
-            Edit Employee
-          </button>
+        {/* Employee Information */}
+        <div className="row g-3">
+          <div className="col-12">
+            <small className="text-secondary">Email</small>
+            <p className="fw-semibold mb-0">{employee.email}</p>
+          </div>
+
+          <div className="col-6">
+            <small className="text-secondary">Department</small>
+            <p className="fw-semibold mb-0">{employee.department}</p>
+          </div>
+
+          <div className="col-6">
+            <small className="text-secondary">Employee ID</small>
+            <p className="fw-semibold mb-0">#{employee.id}</p>
+          </div>
+
+          <div className="col-12">
+            <small className="text-secondary">Monthly Salary</small>
+            <h5 className="fw-bold text-primary mb-0">
+              RM {Number(employee.salary).toLocaleString("en-MY")}
+            </h5>
+          </div>
         </div>
-      </div>
-    </div>
+      </Modal.Body>
+
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onClose}>
+          Close
+        </Button>
+
+        <Button variant="outline-danger" onClick={handleDelete}>
+          <i className="bi bi-trash me-1"></i>
+          Delete
+        </Button>
+
+        <Button variant="primary" onClick={handleEdit}>
+          <i className="bi bi-pencil-square me-1"></i>
+          Edit Employee
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 

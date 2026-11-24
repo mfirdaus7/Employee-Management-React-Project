@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal, Form, Button, Alert, Badge } from "react-bootstrap";
 
 function ImportBackup({ onRestore, onClose }) {
   const [backup, setBackup] = useState(null);
@@ -27,12 +28,15 @@ function ImportBackup({ onRestore, onClose }) {
         ) {
           throw new Error("Invalid backup format.");
         }
+
         const employeeIds = data.employees.map((employee) => employee.id);
+
         const uniqueIds = new Set(employeeIds);
 
         if (uniqueIds.size !== employeeIds.length) {
           throw new Error("Backup contains duplicate employee IDs.");
         }
+
         const validEmployees = data.employees.every(
           (employee) =>
             employee &&
@@ -47,6 +51,7 @@ function ImportBackup({ onRestore, onClose }) {
             employee.salary > 0 &&
             ["Active", "Inactive"].includes(employee.status),
         );
+
         if (!validEmployees) {
           throw new Error("Backup contains invalid employee records.");
         }
@@ -81,48 +86,65 @@ function ImportBackup({ onRestore, onClose }) {
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <div className="modal-header">
-          <h2>Import Backup JSON</h2>
-          <button type="button" onClick={onClose}>
-            X
-          </button>
-        </div>
+    <Modal show={true} onHide={onClose} centered>
+      <Modal.Header closeButton>
+        <Modal.Title className="fw-bold">Import Backup JSON</Modal.Title>
+      </Modal.Header>
 
-        <label>Select Backup File</label>
-        <input
-          type="file"
-          accept=".json,application/json"
-          onChange={handleFileChange}
-        />
+      <Modal.Body>
+        <Form.Group className="mb-3">
+          <Form.Label className="fw-semibold">Select Backup File</Form.Label>
 
-        {error && <div className="form-error">{error}</div>}
+          <Form.Control
+            type="file"
+            accept=".json,application/json"
+            onChange={handleFileChange}
+          />
+
+          <Form.Text className="text-secondary">
+            Select a previously exported EMS JSON backup.
+          </Form.Text>
+        </Form.Group>
+
+        {error && (
+          <Alert variant="danger" dismissible onClose={() => setError("")}>
+            {error}
+          </Alert>
+        )}
 
         {backup && (
-          <div className="import-summary">
-            <div>
-              <strong>{backup.employees.length}</strong>
-              <span>Employees in Backup</span>
+          <div className="bg-success-subtle rounded-3 p-3">
+            <div className="d-flex align-items-center gap-2 mb-3">
+              <i className="bi bi-check-circle-fill text-success fs-4"></i>
+              <strong className="text-success">
+                Backup file validated successfully
+              </strong>
             </div>
-            <div>
+
+            <div className="d-flex justify-content-between mb-2">
+              <span className="text-secondary">Employees in Backup</span>
+              <Badge bg="primary">{backup.employees.length}</Badge>
+            </div>
+
+            <div className="d-flex justify-content-between">
+              <span className="text-secondary">Backup Version</span>
               <strong>{backup.version || "Unknown"}</strong>
-              <span>Backup Version</span>
             </div>
           </div>
         )}
+      </Modal.Body>
 
-        <div className="modal-actions">
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
 
-          <button type="button" onClick={handleRestore} disabled={!backup}>
-            Restore Backup
-          </button>
-        </div>
-      </div>
-    </div>
+        <Button variant="warning" onClick={handleRestore} disabled={!backup}>
+          <i className="bi bi-cloud-upload me-2"></i>
+          Restore Backup
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Modal, Form, Button, Alert, Table, Badge } from "react-bootstrap";
 
 function ImportEmployees({ employees, onImport, onClose }) {
   const [preview, setPreview] = useState([]);
@@ -138,50 +139,74 @@ function ImportEmployees({ employees, onImport, onClose }) {
     onImport(
       validRecords.map(({ rowNumber, valid, reason, ...employee }) => employee),
     );
+
     onClose();
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal import-modal">
-        <div className="modal-header">
-          <h2>Import Employees</h2>
-          <button type="button" onClick={onClose}>
-            X
-          </button>
-        </div>
+    <Modal show={true} onHide={onClose} centered size="xl">
+      <Modal.Header closeButton>
+        <Modal.Title className="fw-bold">Import Employees</Modal.Title>
+      </Modal.Header>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,text/csv"
-          onChange={handleFileChange}
-        />
+      <Modal.Body>
+        <Form.Group className="mb-3">
+          <Form.Label className="fw-semibold">Select CSV File</Form.Label>
 
-        {error && <div className="form-error">{error}</div>}
+          <Form.Control
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            onChange={handleFileChange}
+          />
+
+          <Form.Text className="text-secondary">
+            Upload a CSV file containing employee records.
+          </Form.Text>
+        </Form.Group>
+
+        {error && (
+          <Alert variant="danger" dismissible onClose={() => setError("")}>
+            {error}
+          </Alert>
+        )}
 
         {preview.length > 0 && (
           <>
-            <div className="import-summary">
-              <div>
-                <strong>{preview.length}</strong>
-                <span>Total Records</span>
+            {/* Import Summary */}
+            <div className="row g-3 mb-4">
+              <div className="col-4">
+                <div className="bg-light rounded-3 p-3 text-center">
+                  <h4 className="fw-bold mb-1">{preview.length}</h4>
+                  <small className="text-secondary">Total Records</small>
+                </div>
               </div>
 
-              <div>
-                <strong>{validRecords.length}</strong>
-                <span>Valid</span>
+              <div className="col-4">
+                <div className="bg-success-subtle rounded-3 p-3 text-center">
+                  <h4 className="fw-bold text-success mb-1">
+                    {validRecords.length}
+                  </h4>
+                  <small className="text-success">Valid</small>
+                </div>
               </div>
 
-              <div>
-                <strong>{invalidRecords.length}</strong>
-                <span>Invalid</span>
+              <div className="col-4">
+                <div className="bg-danger-subtle rounded-3 p-3 text-center">
+                  <h4 className="fw-bold text-danger mb-1">
+                    {invalidRecords.length}
+                  </h4>
+                  <small className="text-danger">Invalid</small>
+                </div>
               </div>
             </div>
 
-            <div className="import-preview">
-              <table>
-                <thead>
+            {/* Preview Table */}
+            <h6 className="fw-bold mb-3">Import Preview</h6>
+
+            <div className="table-responsive border rounded-3">
+              <Table hover bordered className="align-middle mb-0">
+                <thead className="table-light">
                   <tr>
                     <th>Name</th>
                     <th>Email</th>
@@ -195,39 +220,40 @@ function ImportEmployees({ employees, onImport, onClose }) {
                     <tr key={employee.rowNumber}>
                       <td>{employee.name}</td>
                       <td>{employee.email}</td>
-                      <td>{employee.salary}</td>
+                      <td>
+                        RM {Number(employee.salary).toLocaleString("en-MY")}
+                      </td>
                       <td>
                         {employee.valid ? (
-                          <span className="import-valid">Valid</span>
+                          <Badge bg="success">Valid</Badge>
                         ) : (
-                          <span className="import-invalid">
-                            {employee.reason}
-                          </span>
+                          <Badge bg="danger">{employee.reason}</Badge>
                         )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
-
-            <div className="modal-actions">
-              <button type="button" onClick={onClose}>
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleImport}
-                disabled={validRecords.length === 0}
-              >
-                Import {validRecords.length} Employees
-              </button>
+              </Table>
             </div>
           </>
         )}
-      </div>
-    </div>
+      </Modal.Body>
+
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+
+        <Button
+          variant="primary"
+          onClick={handleImport}
+          disabled={validRecords.length === 0}
+        >
+          <i className="bi bi-upload me-2"></i>
+          Import {validRecords.length} Employees
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 

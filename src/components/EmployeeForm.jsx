@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal, Form, Button, Alert } from "react-bootstrap";
 
 function EmployeeForm({
   employees,
@@ -37,9 +38,9 @@ function EmployeeForm({
     }
 
     const employeeData = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      position: formData.get("position"),
+      name: formData.get("name").trim(),
+      email: email,
+      position: formData.get("position").trim(),
       department: formData.get("department"),
       salary: salary,
       status: formData.get("status"),
@@ -58,93 +59,121 @@ function EmployeeForm({
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <div className="modal-header">
-          <h2>{isEditing ? "Edit Employee" : "Add New Employee"}</h2>
+    <Modal show={true} onHide={onClose} centered>
+      <Modal.Header closeButton>
+        <Modal.Title className="fw-bold">
+          {isEditing ? "Edit Employee" : "Add New Employee"}
+        </Modal.Title>
+      </Modal.Header>
 
-          <button type="button" onClick={onClose}>
-            X
-          </button>
-        </div>
+      <Form onSubmit={handleSubmit}>
+        <Modal.Body>
+          {error && (
+            <Alert variant="danger" dismissible onClose={() => setError("")}>
+              {error}
+            </Alert>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="form-error">{error}</div>}
-          <label>Full Name</label>
-          <input
-            name="name"
-            type="text"
-            placeholder="Enter full name"
-            defaultValue={employeeToEdit?.name || ""}
-            required
-          />
+          {/* Full Name */}
+          <Form.Group className="mb-3">
+            <Form.Label>Full Name</Form.Label>
 
-          <label>Email</label>
-          <input
-            name="email"
-            type="email"
-            placeholder="Enter email"
-            defaultValue={employeeToEdit?.email || ""}
-            onChange={() => setError("")}
-            required
-          />
+            <Form.Control
+              name="name"
+              type="text"
+              placeholder="Enter full name"
+              defaultValue={employeeToEdit?.name || ""}
+              required
+            />
+          </Form.Group>
 
-          <label>Position</label>
-          <input
-            name="position"
-            type="text"
-            placeholder="Enter position"
-            defaultValue={employeeToEdit?.position || ""}
-            required
-          />
+          {/* Email */}
+          <Form.Group className="mb-3">
+            <Form.Label>Email</Form.Label>
 
-          <label>Department</label>
-          <select
-            name="department"
-            defaultValue={employeeToEdit?.department || ""}
-            required
-          >
-            <option value="" disabled>
-              Select department
-            </option>
-            <option value="IT">IT</option>
-            <option value="Quality Assurance">Quality Assurance</option>
-            <option value="Design">Design</option>
-            <option value="Human Resources">Human Resources</option>
-          </select>
+            <Form.Control
+              name="email"
+              type="email"
+              placeholder="Enter email"
+              defaultValue={employeeToEdit?.email || ""}
+              onChange={() => setError("")}
+              required
+            />
+          </Form.Group>
 
-          <label>Monthly Salary (RM)</label>
-          <input
-            name="salary"
-            type="number"
-            min="1"
-            placeholder="Enter salary"
-            defaultValue={employeeToEdit?.salary || ""}
-            onChange={() => setError("")}
-            required
-          />
+          {/* Position */}
+          <Form.Group className="mb-3">
+            <Form.Label>Position</Form.Label>
 
-          <label>Status</label>
-          <select
-            name="status"
-            defaultValue={employeeToEdit?.status || "Active"}
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+            <Form.Control
+              name="position"
+              type="text"
+              placeholder="Enter position"
+              defaultValue={employeeToEdit?.position || ""}
+              required
+            />
+          </Form.Group>
 
-          <div className="modal-actions">
-            <button type="button" onClick={onClose}>
-              Cancel
-            </button>
+          {/* Department */}
+          <Form.Group className="mb-3">
+            <Form.Label>Department</Form.Label>
 
-            <button type="submit">
-              {isEditing ? "Update Employee" : "Save Employee"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            <Form.Select
+              name="department"
+              defaultValue={employeeToEdit?.department || ""}
+              required
+            >
+              <option value="" disabled>
+                Select department
+              </option>
+
+              <option value="IT">IT</option>
+              <option value="Quality Assurance">Quality Assurance</option>
+              <option value="Design">Design</option>
+              <option value="Human Resources">Human Resources</option>
+            </Form.Select>
+          </Form.Group>
+
+          {/* Salary */}
+          <Form.Group className="mb-3">
+            <Form.Label>Monthly Salary (RM)</Form.Label>
+
+            <Form.Control
+              name="salary"
+              type="number"
+              min="1"
+              placeholder="Enter salary"
+              defaultValue={employeeToEdit?.salary || ""}
+              onChange={() => setError("")}
+              required
+            />
+          </Form.Group>
+
+          {/* Status */}
+          <Form.Group className="mb-3">
+            <Form.Label>Status</Form.Label>
+
+            <Form.Select
+              name="status"
+              defaultValue={employeeToEdit?.status || "Active"}
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </Form.Select>
+          </Form.Group>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+
+          <Button variant="primary" type="submit">
+            {isEditing ? "Update Employee" : "Save Employee"}
+          </Button>
+        </Modal.Footer>
+      </Form>
+    </Modal>
   );
 }
 

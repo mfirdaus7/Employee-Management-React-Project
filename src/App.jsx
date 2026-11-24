@@ -8,6 +8,8 @@ import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employee";
 
 import initialEmployees from "./data/employees";
+import Departments from "./pages/Departments";
+import Settings from "./pages/Settings";
 
 import {
   getEmployees,
@@ -23,6 +25,47 @@ function App() {
 
     return savedEmployees ? JSON.parse(savedEmployees) : initialEmployees;
   });
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("ems-theme") || "light",
+  );
+
+  const [adminProfile, setAdminProfile] = useState(() => {
+    const savedProfile = localStorage.getItem("adminProfile");
+
+    return savedProfile
+      ? JSON.parse(savedProfile)
+      : {
+          fullName: "Administrator",
+          position: "System Admin",
+          email: "admin@ems.com",
+        };
+  });
+
+  const [systemPreferences, setSystemPreferences] = useState(() => {
+    const savedPreferences = localStorage.getItem("systemPreferences");
+
+    return savedPreferences
+      ? JSON.parse(savedPreferences)
+      : {
+          defaultStatus: "Active",
+          pageSize: 10,
+          confirmDelete: true,
+        };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ems-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "systemPreferences",
+      JSON.stringify(systemPreferences),
+    );
+  }, [systemPreferences]);
 
   useEffect(() => {
     localStorage.setItem("employees", JSON.stringify(employees));
@@ -120,11 +163,19 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="app-layout">
-        <Sidebar />
+      <div className={`app-layout ${theme}-theme`}>
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
         <main className="main-content">
-          <Header />
+          <Header
+            onMenuClick={() => setIsSidebarOpen(true)}
+            theme={theme}
+            onThemeChange={setTheme}
+            adminProfile={adminProfile}
+          />
 
           <div className="page-content">
             <Routes>
@@ -135,11 +186,30 @@ function App() {
                 element={
                   <Employees
                     employees={employees}
+                    pageSize={systemPreferences.pageSize}
+                    confirmDelete={systemPreferences.confirmDelete}
                     onAddEmployee={addEmployee}
                     onDeleteEmployee={deleteEmployeeRecord}
                     onUpdateEmployee={updateEmployeeRecord}
                     onImportEmployees={importEmployees}
                     onRestoreEmployees={restoreEmployeesRecord}
+                  />
+                }
+              />
+              <Route
+                path="/departments"
+                element={<Departments employees={employees} />}
+              />
+              <Route
+                path="/settings"
+                element={
+                  <Settings
+                    theme={theme}
+                    preferences={systemPreferences}
+                    onPreferencesChange={setSystemPreferences}
+                    onThemeChange={setTheme}
+                    adminProfile={adminProfile}
+                    onProfileChange={setAdminProfile}
                   />
                 }
               />
