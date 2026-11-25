@@ -49,15 +49,7 @@ function EmployeeCard({ employee, onDelete, onEdit, onView }) {
           <button
             type="button"
             className="btn btn-sm btn-outline-danger"
-            onClick={() => {
-              const confirmed = window.confirm(
-                `Are you sure you want to delete ${employee.name}?`,
-              );
-
-              if (confirmed) {
-                onDelete(employee.id);
-              }
-            }}
+            onClick={() => onDelete(employee.id)}
           >
             <i className="bi bi-trash me-1"></i>
             Delete

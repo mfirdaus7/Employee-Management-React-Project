@@ -137,12 +137,17 @@ function ImportEmployees({ employees, onImport, onClose }) {
 
   function handleImport() {
     onImport(
-      validRecords.map(({ rowNumber, valid, reason, ...employee }) => employee),
+      validRecords.map((record) =>
+        Object.fromEntries(
+          Object.entries(record).filter(
+            ([key]) => !["rowNumber", "valid", "reason"].includes(key),
+          ),
+        ),
+      ),
     );
 
     onClose();
   }
-
   return (
     <Modal show={true} onHide={onClose} centered size="xl">
       <Modal.Header closeButton>

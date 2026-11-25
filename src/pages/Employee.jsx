@@ -35,6 +35,22 @@ function Employees({
     setShowForm(true);
   }
 
+  async function handleDeleteEmployee(employeeId) {
+    const employee = employees.find((item) => item.id === employeeId);
+
+    if (!employee) return false;
+
+    if (confirmDelete) {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete ${employee.name}?`,
+      );
+
+      if (!confirmed) return false;
+    }
+
+    return await onDeleteEmployee(employeeId);
+  }
+
   function handleImportEmployees(importedEmployees) {
     onImportEmployees(importedEmployees);
   }
@@ -253,7 +269,7 @@ function Employees({
                   <EmployeeCard
                     key={employee.id}
                     employee={employee}
-                    onDelete={onDeleteEmployee}
+                    onDelete={handleDeleteEmployee}
                     onEdit={handleEditEmployee}
                     onView={setSelectedEmployee}
                   />
@@ -326,7 +342,7 @@ function Employees({
           employee={selectedEmployee}
           onClose={() => setSelectedEmployee(null)}
           onEdit={handleEditEmployee}
-          onDelete={onDeleteEmployee}
+          onDelete={handleDeleteEmployee}
         />
       )}
 

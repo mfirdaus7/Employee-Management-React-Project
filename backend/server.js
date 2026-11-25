@@ -8,8 +8,68 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-// GET all employees
+// Validate and clean employee data
+function validateEmployee(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { error: "Invalid employee data." };
+  }
 
+  const { name, email, position, department, salary, status } = body;
+
+  if (
+    typeof name !== "string" ||
+    typeof email !== "string" ||
+    typeof position !== "string" ||
+    typeof department !== "string" ||
+    typeof status !== "string"
+  ) {
+    return { error: "Please provide valid employee details." };
+  }
+
+  const cleanName = name.trim();
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPosition = position.trim();
+  const cleanDepartment = department.trim();
+  const cleanStatus = status.trim();
+
+  const cleanSalary =
+    typeof salary === "number"
+      ? salary
+      : typeof salary === "string" && salary.trim() !== ""
+        ? Number(salary)
+        : NaN;
+
+  if (
+    !cleanName ||
+    !cleanEmail ||
+    !cleanPosition ||
+    !cleanDepartment ||
+    !cleanStatus ||
+    !Number.isFinite(cleanSalary) ||
+    cleanSalary < 0
+  ) {
+    return { error: "Please provide valid employee details." };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(cleanEmail)) {
+    return { error: "Invalid email format." };
+  }
+
+  return {
+    employee: {
+      name: cleanName,
+      email: cleanEmail,
+      position: cleanPosition,
+      department: cleanDepartment,
+      salary: cleanSalary,
+      status: cleanStatus,
+    },
+  };
+}
+
+// GET - Get all employees
 app.get("/api/employees", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM employees ORDER BY id ASC");
@@ -19,13 +79,12 @@ app.get("/api/employees", async (req, res) => {
     console.error("Error fetching employees:", error);
 
     res.status(500).json({
-      message: "Failed to fetch employees",
+      message: "Failed to fetch employees.",
     });
   }
 });
 
-// RESTORE all employees
-
+// RESTORE - Restore all employees
 app.put("/api/employees/restore", async (req, res) => {
   const restoredEmployees = req.body;
 
@@ -35,15 +94,34 @@ app.put("/api/employees/restore", async (req, res) => {
     });
   }
 
+  const validatedEmployees = [];
+
+  for (const employee of restoredEmployees) {
+    const validation = validateEmployee(employee);
+    const id = Number(employee?.id);
+
+    if (validation.error || !Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        message: "Invalid employee data in backup.",
+      });
+    }
+
+    validatedEmployees.push({
+      id,
+      ...validation.employee,
+    });
+  }
+
   let client;
 
   try {
     client = await pool.connect();
+
     await client.query("BEGIN");
 
     await client.query("DELETE FROM employees");
 
-    for (const employee of restoredEmployees) {
+    for (const employee of validatedEmployees) {
       await client.query(
         `INSERT INTO employees
          (id, name, email, position, department, salary, status)
@@ -72,10 +150,16 @@ app.put("/api/employees/restore", async (req, res) => {
 
     res.json({
       message: "Employees restored successfully.",
-      employees: restoredEmployees,
+      employees: validatedEmployees,
     });
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (client) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        console.error("Rollback error:", rollbackError);
+      }
+    }
 
     console.error("Restore error:", error);
 
@@ -90,32 +174,18 @@ app.put("/api/employees/restore", async (req, res) => {
 });
 
 // POST - Add new employee
-
 app.post("/api/employees", async (req, res) => {
-  const { name, email, position, department, salary, status } = req.body;
+  const validation = validateEmployee(req.body);
 
-  if (
-    !name?.trim() ||
-    !email?.trim() ||
-    !position?.trim() ||
-    !department?.trim() ||
-    !status?.trim() ||
-    salary === undefined ||
-    salary === null ||
-    !Number.isFinite(Number(salary)) ||
-    Number(salary) < 0
-  ) {
+  if (validation.error) {
     return res.status(400).json({
-      message: "Please provide valid employee details.",
+      message: validation.error,
     });
   }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  if (!emailRegex.test(email.trim())) {
-    return res.status(400).json({
-      message: "Invalid email format.",
-    });
-  }
+  const { name, email, position, department, salary, status } =
+    validation.employee;
+
   try {
     const result = await pool.query(
       `INSERT INTO employees
@@ -145,7 +215,6 @@ app.post("/api/employees", async (req, res) => {
 });
 
 // PUT - Update employee
-
 app.put("/api/employees/:id", async (req, res) => {
   const employeeId = Number(req.params.id);
 
@@ -155,31 +224,16 @@ app.put("/api/employees/:id", async (req, res) => {
     });
   }
 
-  const { name, email, position, department, salary, status } = req.body;
+  const validation = validateEmployee(req.body);
 
-  if (
-    !name?.trim() ||
-    !email?.trim() ||
-    !position?.trim() ||
-    !department?.trim() ||
-    !status?.trim() ||
-    salary === undefined ||
-    salary === null ||
-    !Number.isFinite(Number(salary)) ||
-    Number(salary) < 0
-  ) {
+  if (validation.error) {
     return res.status(400).json({
-      message: "Please provide valid employee details.",
+      message: validation.error,
     });
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(email.trim())) {
-    return res.status(400).json({
-      message: "Invalid email format.",
-    });
-  }
+  const { name, email, position, department, salary, status } =
+    validation.employee;
 
   try {
     const result = await pool.query(
@@ -221,7 +275,6 @@ app.put("/api/employees/:id", async (req, res) => {
 });
 
 // DELETE - Remove employee
-
 app.delete("/api/employees/:id", async (req, res) => {
   const employeeId = Number(req.params.id);
 

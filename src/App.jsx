@@ -124,8 +124,10 @@ function App() {
       );
 
       alert("Employee deleted successfully!");
+      return true;
     } catch (error) {
       alert(error.message);
+      return false;
     }
   }
 

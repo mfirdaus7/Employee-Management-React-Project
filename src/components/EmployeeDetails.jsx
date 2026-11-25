@@ -10,17 +10,13 @@ function EmployeeDetails({ employee, onClose, onEdit, onDelete }) {
     onClose();
   }
 
-  function handleDelete() {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${employee.name}?`,
-    );
+  async function handleDelete() {
+    const deleted = await onDelete(employee.id);
 
-    if (confirmed) {
-      onDelete(employee.id);
+    if (deleted) {
       onClose();
     }
   }
-
   return (
     <Modal show={true} onHide={onClose} centered>
       <Modal.Header closeButton>
